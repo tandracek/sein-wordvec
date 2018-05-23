@@ -26,13 +26,6 @@ public class VerifierTest {
         assertEquals(1, files.size());
     }
 
-    @Test
-    public void verifyFiles() {
-        Verifier verifier = new Verifier(Locations.DOWNLOAD_PATH);
-        List<File> files = verifier.getIncorrectDownloads();
-        System.out.println("Got the following incorrect: \n" + files.toString());
-    }
-
     private static String createLargeString(int count) {
         StringBuilder builder = new StringBuilder();
         IntStream.range(0, count).forEach(i -> {

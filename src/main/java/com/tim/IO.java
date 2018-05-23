@@ -14,11 +14,25 @@ import java.util.stream.Collectors;
 
 public class IO {
 
+    public static void mergeText(File directory, String toFilePath) {
+        if (!directory.isDirectory()) {
+            throw new IllegalArgumentException(directory.getName() + " is not a directory.");
+        }
+
+        for (File file : directory.listFiles()) {
+            String contents = readFile(file);
+            write(contents, toFilePath, true);
+        }
+    }
+
+    public static String readFile(File file) {
+        return readFile(file, "UTF-8");
+    }
+
     public static String readFile(File file, String charset) {
         return read(file.getPath(), charset);
     }
 
-    //TODO create a read that doesnt stream over the lines
     public static String read(String path) {
         return read(path, "UTF-8");
     }
@@ -31,13 +45,17 @@ public class IO {
         }
     }
 
-    public static void write(String content, String path) {
-        try (Writer writer = new FileWriter(new File(path))) {
+    public static void write(String content, String path, boolean append) {
+        try (Writer writer = new FileWriter(new File(path), append)) {
             writer.write(content);
         } catch (IOException io) {
             System.out.println("Unable to write file to path: " + path);
             io.printStackTrace();
         }
+    }
+
+    public static void write(String content, String path) {
+        write(content, path, false);
     }
 
     public static void deleteFolder(String folder) {

@@ -1,30 +1,29 @@
 package com.tim;
 
-import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.UncheckedIOException;
-import java.io.Writer;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.List;
-import java.util.stream.Collectors;
-
-import org.jsoup.Jsoup;
-import org.jsoup.nodes.Document;
+import java.util.stream.IntStream;
 
 public class Download {
-    
-    public static void downloadScripts(String downloadPath) {
-        WebsiteDownload download = new WebsiteDownload();
-        Document root = get("http://www.seinfeldscripts.com/seinfeld-scripts.html");
-        List<String> links = WebsiteParser.getLinksByElement(root, "table")
-                                .stream()
-                                .map(link -> "http://www.seinfeldscripts.com/" + link.replaceAll(" +", ""))
-                                .collect(Collectors.toList());
-        download.downloadAll(1500, links, downloadPath);
+    private static final List<Integer> DOUBLES = Arrays.asList(82, 100, 177, 179);
+
+    public static void downloadSeinology(String downloadPath) {
+        IntStream.range(1, 180).forEach(index -> {
+            String scriptNumber = String.valueOf(index);
+            if (DOUBLES.contains(index - 1)) {
+                return;
+            }
+            if (DOUBLES.contains(index)) {
+                scriptNumber = String.format("%dand%d", index, index + 1);
+            } else if (index < 10) {
+                scriptNumber = "0" + scriptNumber;
+            }
+
+            System.out.println("Getting number " + scriptNumber);
+            String link = String.format("http://www.seinology.com/scripts/script-%s.shtml", scriptNumber);
+            WebsiteDownload.downloadLink(3000, link, downloadPath);
+        });
     }
 
     public static void parseScripts(String pathToFiles, String parsedPath) {
@@ -34,31 +33,23 @@ public class Download {
         File directory = new File(pathToFiles);
         for (File file : directory.listFiles()) {
             if (!file.isDirectory()) {
-                try {
-                    System.out.println("Parsing " + file.getName());
-                    Document script = Jsoup.parse(file, "UTF-8");
-                    String parsed = WebsiteParser.strip(script, "p", element -> {
-                        return element.children().isEmpty() && element.hasText();
-                    });
-                    parsed = furtherParse(parsed);
-                    IO.write(parsed, parsedPath + "/" + file.getName());
-                } catch (IOException io) {
-                    System.out.println("Error occured while parsing file: " + file);
-                    io.printStackTrace();
-                }
+                System.out.println("Parsing " + file.getName());    
+                String parsed = getAndStripDown(file);
+                IO.write(parsed, parsedPath + "/" + file.getName());
             }
         }
     }
 
-    public static String furtherParse(String contents) {
-        return contents.replaceAll("\\[.*\\]", "").replaceAll("&nbsp;", "").replaceAll(" {2,}", " ");
-    }
-
-    public static Document get(String url) {
-        try {
-            return Jsoup.connect(url).get();
-        } catch (IOException io) {
-            throw new UncheckedIOException(io);
+    public static String getAndStripDown(File file) {
+        String html = IO.readFile(file);
+        String parsed = WebsiteParser.strip(html, ".spacer2 font", ele -> true);
+        parsed = parsed.replaceAll("<br>", "\n");
+        int index = parsed.lastIndexOf("=");
+        parsed = parsed.substring(index + 1, parsed.length());
+        parsed = parsed.replaceAll("(?m)^[ \t]*\r?\n", "");
+        if (index < 0) {
+            throw new RuntimeException(String.format("Unable to parse", file.getName()));
         }
+        return parsed;
     }
 }
