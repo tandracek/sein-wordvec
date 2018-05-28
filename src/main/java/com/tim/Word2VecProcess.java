@@ -2,6 +2,7 @@ package com.tim;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.Collection;
 
 import org.deeplearning4j.models.embeddings.loader.WordVectorSerializer;
@@ -13,15 +14,34 @@ import org.deeplearning4j.text.tokenization.tokenizerfactory.DefaultTokenizerFac
 import org.deeplearning4j.text.tokenization.tokenizerfactory.TokenizerFactory;
 import org.jsoup.UncheckedIOException;
 
-public class Process {
-    public static final String HOME = System.getProperty("user.home");
-    public static final String DOWNLOAD_PATH = HOME + "/seinfeld/original";
-    public static final String PARSED_PATH = HOME + "/seinfeld/parsed";
-    public static final String ALL_PATH = HOME + "/seinfeld/allScripts";
-    public static final String VEC_PATH = HOME + "/seinfeld/wordVec.txt";
+import static com.tim.Paths.MERGED_PATH;
+import static com.tim.Paths.VEC_PATH;
+
+//TODO compare against glove
+public class Word2VecProcess {
+    private Word2Vec vec;
+
+    private Word2VecProcess(Word2Vec vec) {
+        this.vec = vec;
+    }
+
+    public void printClosest(String phrase, int numClosest) {
+        Collection<String> lst = this.vec.wordsNearestSum(phrase, numClosest);
+        System.out.println(String.format("%d Words closest to '%s': %s", numClosest, phrase, lst.toString()));
+    }
+
+    public void printFindRelatedWord(String word1, String word2, String compare) {
+        Collection<String> nearest = this.vec.wordsNearestSum(Arrays.asList(compare, word2), Arrays.asList(word1), 1);
+        System.out.println(String.format("%s is to %s, as %s is to %s", word1, word2, compare, nearest.toString()));
+    }
+
+    public static Word2VecProcess from(String modelPath) {
+        Word2Vec model = WordVectorSerializer.readWord2VecModel(new File(modelPath)); 
+        return new Word2VecProcess(model);
+    }
 
     public static void trainAndWrite() {
-        String filePath = ALL_PATH;
+        String filePath = MERGED_PATH;
 
         System.out.println("Load & Vectorize Sentences....");
         SentenceIterator iter = null;
@@ -51,13 +71,5 @@ public class Process {
 
         System.out.println("Writing word vectors to text file....");
         WordVectorSerializer.writeWord2VecModel(vec, new File(VEC_PATH));
-    }
-
-    public static void runExistingModel() {
-        Word2Vec vec = WordVectorSerializer.readWord2VecModel(new File(VEC_PATH)); 
-
-        System.out.println("Closest Words:");
-        Collection<String> lst = vec.wordsNearestSum("susan", 10);
-        System.out.println(String.format("10 Words closest to 'susan': %s", lst.toString()));
     }
 }

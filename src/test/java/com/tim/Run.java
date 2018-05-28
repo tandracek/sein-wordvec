@@ -6,11 +6,12 @@ import java.util.List;
 import org.junit.Ignore;
 import org.junit.Test;
 
-@Ignore
+import static com.tim.Paths.DOWNLOAD_PATH;
+import static com.tim.Paths.PARSED_PATH;
+import static com.tim.Paths.MERGED_PATH;
+
+// @Ignore
 public class Run {
-    public static final String HOME = System.getProperty("user.home");
-    public static final String DOWNLOAD_PATH = HOME + "/seinfeld/original";
-    public static final String PARSED_PATH = HOME + "/seinfeld/parsed";
 
     @Test
     public void downloadSeinology() {
@@ -25,6 +26,13 @@ public class Run {
     }
 
     @Test
+    public void stripSingle() {
+        System.out.println("Stripping single...");
+        String parsed = Download.getAndStripDown(new File(DOWNLOAD_PATH + "/script-103"));
+        System.out.println(parsed);
+    }
+
+    @Test
     public void verifyFiles() {
         Verifier verifier = new Verifier(DOWNLOAD_PATH);
         List<File> files = verifier.getIncorrectDownloads();
@@ -34,21 +42,6 @@ public class Run {
     @Test
     public void merge() {
         System.out.println("Merging...");
-        IO.mergeText(new File(PARSED_PATH), HOME + "/seinfeld/allScripts");
-    }
-
-    @Test
-    public void train() {
-        try {
-            Process.trainAndWrite();
-        } catch (Exception e) {
-            System.out.println("Got exception");
-            e.printStackTrace();
-        }
-    }
-
-    @Test
-    public void runExisting() {
-        Process.runExistingModel();
+        IO.mergeText(new File(PARSED_PATH), MERGED_PATH);
     }
 }

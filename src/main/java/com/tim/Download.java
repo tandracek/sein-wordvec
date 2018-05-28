@@ -45,11 +45,13 @@ public class Download {
         String parsed = WebsiteParser.strip(html, ".spacer2 font", ele -> true);
         parsed = parsed.replaceAll("<br>", "\n");
         int index = parsed.lastIndexOf("=");
-        parsed = parsed.substring(index + 1, parsed.length());
-        parsed = parsed.replaceAll("(?m)^[ \t]*\r?\n", "");
         if (index < 0) {
-            throw new RuntimeException(String.format("Unable to parse", file.getName()));
+            throw new RuntimeException(String.format("Unable to parse %s. Expecting an '=' symbol in the html.", file.getName()));
         }
+        parsed = parsed.substring(index + 1, parsed.length());
+        parsed = parsed.replaceAll("&nbsp;", "");
+        parsed = parsed.replaceAll("\\[.*\\]", "");
+        parsed = parsed.replaceAll("(?m)^[ \t]*\r?\n", "");
         return parsed;
     }
 }

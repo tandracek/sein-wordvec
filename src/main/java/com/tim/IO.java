@@ -18,7 +18,7 @@ public class IO {
         if (!directory.isDirectory()) {
             throw new IllegalArgumentException(directory.getName() + " is not a directory.");
         }
-
+        new File(toFilePath).delete();
         for (File file : directory.listFiles()) {
             String contents = readFile(file);
             write(contents, toFilePath, true);
